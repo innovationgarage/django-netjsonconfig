@@ -1,8 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from ..utils import get_random_key
-from ..validators import key_validator, mac_address_validator
+from ..validators import hostname_validator, key_validator, mac_address_validator
 from .base import BaseModel
 
 
@@ -47,12 +48,22 @@ class AbstractDevice(BaseModel):
         modifies related config status if name
         attribute is changed (queries the database)
         """
+        self._validate_hostname()
         super(AbstractDevice, self).clean()
         if self._state.adding:
             return
         current = self.__class__.objects.get(pk=self.pk)
         if self.name != current.name and self._has_config():
             self.config.set_status_modified()
+
+    def _validate_hostname(self):
+        try:
+            hostname_validator(self.name)
+        except ValidationError:
+            try:
+                mac_address_validator(self.name)
+            except ValidationError:
+                raise ValidationError({'name': _('Must be a valid hostname')})
 
     def _has_config(self):
         return hasattr(self, 'config')

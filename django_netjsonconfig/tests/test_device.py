@@ -87,3 +87,20 @@ class TestDevice(CreateConfigMixin, TestCase):
         self._create_config(device=d)
         self.assertEqual(d.get_default_templates().count(),
                          Config().get_default_templates().count())
+
+    def test_bad_hostnames(self):
+        bad_host_name_list = [
+            'test device',
+            'openwisp..mydomain.com',
+            'openwisp,mydomain.test',
+            '00:F2:1B:E6:0C:FZ',
+            '00:F2:1B:E6:0C:FY'
+        ]
+        for hosts in bad_host_name_list:
+            try:
+                self._create_device(name=hosts)
+            except ValidationError as e:
+                self.assertEqual(
+                    'Must be a valid hostname',
+                    e.message_dict['name'][0]
+                    )
