@@ -57,13 +57,14 @@ class AbstractDevice(BaseModel):
             self.config.set_status_modified()
 
     def _validate_hostname(self):
-        try:
-            hostname_validator(self.name)
-        except ValidationError:
-            try:
-                mac_address_validator(self.name)
-            except ValidationError:
-                raise ValidationError({'name': _('Must be a valid hostname')})
+        pass
+        # try:
+        #     hostname_validator(self.name)
+        # except ValidationError:
+        #     try:
+        #         mac_address_validator(self.name)
+        #     except ValidationError:
+        #         raise ValidationError({'name': _('Must be a valid hostname')})
 
     def _has_config(self):
         return hasattr(self, 'config')
@@ -116,3 +117,9 @@ class AbstractDevice(BaseModel):
     @classmethod
     def get_config_model(cls):
         return cls._meta.get_field('config').related_model
+
+
+# edit validators
+AbstractDevice._meta.get_field('name').validators = AbstractDevice._meta.get_field('name').validators[:] + [
+    hostname_validator
+]
